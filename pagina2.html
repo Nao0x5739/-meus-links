@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Meus Links</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #121212;
+            color: #e0e0e0;
+            transition: background 0.4s, color 0.4s;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4da6ff;
+            text-shadow: 0 0 10px #4da6ff55;
+        }
+
+        #controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input, select {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #4da6ff;
+            border-radius: 8px;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            outline: none;
+            margin: 5px;
+            transition: box-shadow 0.3s, border 0.3s;
+        }
+        input:focus, select:focus {
+            box-shadow: 0 0 10px #4da6ff88;
+            border-color: #80c1ff;
+        }
+
+        .button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #4da6ff;
+            color: white;
+            transition: transform 0.2s, background 0.3s;
+        }
+        .button:hover {
+            transform: scale(1.1);
+            background: #80c1ff;
+        }
+
+        /* Lista de links */
+        ul {
+            list-style: none;
+            padding: 0;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        li {
+            background: #1e1e1e;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            transition: transform 0.3s, background 0.3s;
+            box-shadow: 0 0 10px rgba(77,166,255,0.2);
+        }
+        li:hover {
+            transform: translateX(5px);
+            background: #2a2a2a;
+        }
+
+        a {
+            color: #80c1ff;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        a:hover {
+            color: #cce6ff;
+        }
+
+        .category {
+            font-size: 14px;
+            margin-left: 10px;
+            color: #aaa;
+        }
+
+        /* Botão excluir */
+        .delete-btn {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: transform 0.2s, background 0.3s;
+        }
+        .delete-btn:hover {
+            transform: scale(1.2);
+            background: #ff8080;
+        }
+
+        /* Filtros */
+        #filters {
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        /* Rodapé */
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Modo claro */
+        body.light-mode {
+            background: #f2f2f2;
+            color: #222;
+        }
+        body.light-mode h1 {
+            color: #0059b3;
+            text-shadow: none;
+        }
+        body.light-mode input, body.light-mode select {
+            background: white;
+            color: #222;
+            border-color: #4da6ff;
+        }
+        body.light-mode .button {
+            background: #4da6ff;
+            color: white;
+        }
+        body.light-mode li {
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        body.light-mode a {
+            color: #0059b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Meus Links</h1>
+    <div id="controls">
+        <input type="text" id="titleInput" placeholder="Nome do link">
+        <input type="text" id="linkInput" placeholder="Cole o link aqui">
+        <select id="categoryInput">
+            <option value="Jogos">Jogos</option>
+            <option value="Vídeos">Vídeos</option>
+            <option value="Estudos">Estudos</option>
+            <option value="Outros">Outros</option>
+        </select>
+        <button class="button" id="addButton">Adicionar</button>
+        <button class="button" id="toggleMode">Modo Claro/Escuro</button>
+    </div>
+
+    <div id="filters">
+        <input type="text" id="searchInput" placeholder="Pesquisar link...">
+        <button class="button" data-filter="Todos">Todos</button>
+        <button class="button" data-filter="Jogos">Jogos</button>
+        <button class="button" data-filter="Vídeos">Vídeos</button>
+        <button class="button" data-filter="Estudos">Estudos</button>
+        <button class="button" data-filter="Outros">Outros</button>
+    </div>
+
+    <ul id="linkList"></ul>
+
+    <footer>Site feito por Naum Barros</footer>
+
+    <script>
+        const titleInput = document.getElementById('titleInput');
+        const linkInput = document.getElementById('linkInput');
+        const categoryInput = document.getElementById('categoryInput');
+        const addBtn = document.getElementById('addButton');
+        const list = document.getElementById('linkList');
+        const toggleMode = document.getElementById('toggleMode');
+        const searchInput = document.getElementById('searchInput');
+        const filterButtons = document.querySelectorAll('#filters button');
+
+        let savedLinks = JSON.parse(localStorage.getItem('links')) || [];
+        savedLinks.forEach(link => addLink(link.title, link.url, link.category));
+
+        addBtn.addEventListener('click', () => {
+            const title = titleInput.value.trim() || "Sem título";
+            const url = linkInput.value.trim();
+            const category = categoryInput.value;
+
+            if (url) {
+                const newLink = { title, url, category };
+                savedLinks.push(newLink);
+                localStorage.setItem('links', JSON.stringify(savedLinks));
+                addLink(title, url, category, true);
+                titleInput.value = '';
+                linkInput.value = '';
+            }
+        });
+
+        toggleMode.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+        });
+
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.toLowerCase();
+            document.querySelectorAll('#linkList li').forEach(li => {
+                const text = li.querySelector('a').textContent.toLowerCase();
+                li.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        });
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const filter = button.getAttribute('data-filter');
+                document.querySelectorAll('#linkList li').forEach(li => {
+                    const category = li.querySelector('.category').textContent.replace(/\[|\]/g, '');
+                    li.style.display = (filter === "Todos" || category === filter) ? 'flex' : 'none';
+                });
+            });
+        });
+
+        function addLink(title, url, category, animate = false) {
+            const li = document.createElement('li');
+
+            const linkEl = document.createElement('a');
+            linkEl.href = url;
+            linkEl.textContent = title;
+            linkEl.target = '_blank';
+
+            const categoryEl = document.createElement('span');
+            categoryEl.textContent = `[${category}]`;
+            categoryEl.classList.add('category');
+
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Excluir';
+            delBtn.classList.add('delete-btn');
+            delBtn.addEventListener('click', () => {
+                li.remove();
+                savedLinks = savedLinks.filter(item => item.url !== url);
+                localStorage.setItem('links', JSON.stringify(savedLinks));
+            });
+
+            li.appendChild(linkEl);
+            li.appendChild(categoryEl);
+            li.appendChild(delBtn);
+            list.appendChild(li);
+
+            if (animate) {
+                li.style.transform = 'scale(0.5)';
+                setTimeout(() => li.style.transform = 'scale(1)', 100);
+            }
+        }
+    </script>
+</body>
+</html>
